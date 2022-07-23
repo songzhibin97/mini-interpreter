@@ -308,7 +308,7 @@ func TestParser_parsePrefixExpr(t *testing.T) {
 }
 
 func TestParser_MacroExpr(t *testing.T) {
-	input := `macro(x, y) { x + y }`
+	input := `macro t (x, y) { x + y }`
 	p := NewParser(lexer.NewLexer(input))
 	v := p.ParseProgram()
 	for _, s := range p.Errors() {
@@ -319,6 +319,7 @@ func TestParser_MacroExpr(t *testing.T) {
 	assert.Equal(t, ok, true)
 	mp, ok := stmt.Expr.(*ast.Macro)
 	assert.Equal(t, ok, true)
+	testIdentifier(t, mp.Name, "t")
 	assert.Equal(t, len(mp.Params), 2)
 	testIdentifier(t, mp.Params[0], "x")
 	testIdentifier(t, mp.Params[1], "y")

@@ -458,7 +458,7 @@ func TestDefinedMacro(t *testing.T) {
 	input := `
    var n = 1
    func a (x, y) { x + y }
-   var mc = macro(x, y) { x + y }
+   macro mc (x, y) { x + y }
    `
 	p := parser.NewParser(lexer.NewLexer(input))
 	env := object.NewEnv(nil)
@@ -487,21 +487,21 @@ func TestExpendMacro(t *testing.T) {
 	}{
 		{
 			`
-			var infixExpr = macro() { quote(1 + 2) }
+			macro infixExpr() { quote(1 + 2) }
 			infixExpr()
 		`,
 			`(1 + 2)`,
 		},
 		{
 			`
-			var reverse = macro(a, b) { quote(unquote(b) - unquote(a)) }
+			macro reverse(a, b) { quote(unquote(b) - unquote(a)) }
 			reverse(2 + 2, 10 - 5)
 `,
 			`(10 - 5) - (2 + 2)`,
 		},
 		{
 			`
-			var unless = macro(condition, consequence, alternative) {
+			macro unless (condition, consequence, alternative) {
                      quote(if (!(unquote(condition))) {
                          unquote(consequence)
                      } else {

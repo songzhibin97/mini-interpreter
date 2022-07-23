@@ -236,6 +236,15 @@ func (p *Parser) parseMapExpr() ast.Expr {
 func (p *Parser) parseMacroExpr() ast.Expr {
 	expr := &ast.Macro{Token: p.curToken}
 
+	if !p.forecastNextPeek(token.IDENT) {
+		return nil
+	}
+
+	expr.Name = &ast.Identifier{
+		Token: p.curToken,
+		Value: p.curToken.Value,
+	}
+
 	if !p.forecastNextPeek(token.LPAREN) {
 		return nil
 	}

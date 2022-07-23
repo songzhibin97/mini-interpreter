@@ -445,18 +445,18 @@ func DefinedMacro(program *ast.Program, env *object.Env) {
 }
 
 func isMacroDefinition(node ast.Stmt) bool {
-	stmt, ok := node.(*ast.VarStmt)
+	stmt, ok := node.(*ast.ExprStmt)
 	if !ok {
 		return false
 	}
-	_, ok = stmt.Value.(*ast.Macro)
+	_, ok = stmt.Expr.(*ast.Macro)
 	return ok
 }
 
-func addMacro(stmt ast.Stmt, env *object.Env) {
-	varStmt, _ := stmt.(*ast.VarStmt)
-	macro, _ := varStmt.Value.(*ast.Macro)
-	env.Set(varStmt.Name.Value, &object.Macro{
+func addMacro(stmt ast.Node, env *object.Env) {
+	exprStmt, _ := stmt.(*ast.ExprStmt)
+	macro, _ := exprStmt.Expr.(*ast.Macro)
+	env.Set(macro.Name.Value, &object.Macro{
 		Parameters: macro.Params,
 		Body:       macro.Body,
 		Env:        env,

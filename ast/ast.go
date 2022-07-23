@@ -201,11 +201,13 @@ func (m Map) String() string {
 
 type Macro struct {
 	Token  *token.Token
+	Name   *Identifier
 	Params []*Identifier
 	Body   *BlockStmt
 }
 
 func (m Macro) TokenValue() string { return m.Token.Value }
+func (m Macro) stmtNode()          {}
 func (m Macro) exprNode()          {}
 func (m Macro) String() string {
 	params := make([]string, 0, len(m.Params))
@@ -213,7 +215,7 @@ func (m Macro) String() string {
 		params = append(params, param.String())
 	}
 
-	return m.TokenValue() + "(" + strings.Join(params, ", ") + ") " + m.Body.String()
+	return m.TokenValue() + "" + m.Name.String() + "(" + strings.Join(params, ", ") + ") " + m.Body.String()
 }
 
 // ============================================================================
@@ -288,7 +290,7 @@ func (f FuncExpr) String() string {
 		params = append(params, param.String())
 	}
 
-	return f.TokenValue() + f.Name.String() + " " + "(" + strings.Join(params, ", ") + ") " + f.Body.String()
+	return f.TokenValue() + " " + f.Name.String() + " " + "(" + strings.Join(params, ", ") + ") " + f.Body.String()
 }
 
 // ============================================================================
