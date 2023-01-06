@@ -9,7 +9,16 @@ import (
 	"github.com/songzhibin97/mini-interpreter/object"
 )
 
-func Eval(node ast.Node, env *object.Env) object.Object {
+type Handler func(node ast.Node, env *object.Env) object.Object
+
+func Eval(node ast.Node, env *object.Env, handler ...Handler) object.Object {
+	handler = append(handler, defaultEval)
+	return handler[0](node, env)
+}
+
+// default
+
+func defaultEval(node ast.Node, env *object.Env) object.Object {
 	switch n := node.(type) {
 	case *ast.Program:
 		return evalProgram(n, env)
@@ -18,36 +27,36 @@ func Eval(node ast.Node, env *object.Env) object.Object {
 		return evalBlockStmt(n, env)
 
 	case *ast.ExprStmt:
-		return Eval(n.Expr, env)
+		return defaultEval(n.Expr, env)
 
 	case *ast.ReturnStmt:
-		ret := Eval(n.Value, env)
+		ret := defaultEval(n.Value, env)
 		if isError(ret) {
 			return ret
 		}
 		return &object.Return{Value: ret}
 
 	case *ast.VarStmt:
-		ret := Eval(n.Value, env)
+		ret := defaultEval(n.Value, env)
 		if isError(ret) {
 			return ret
 		}
 		env.Set(n.Name.Value, ret)
 
 	case *ast.PrefixExpr:
-		right := Eval(n.Right, env)
+		right := defaultEval(n.Right, env)
 		if isError(right) {
 			return right
 		}
 		return evalPrefixExpr(n.Operator, right)
 
 	case *ast.InfixExpr:
-		left := Eval(n.Left, env)
+		left := defaultEval(n.Left, env)
 		if isError(left) {
 			return left
 		}
 
-		right := Eval(n.Right, env)
+		right := defaultEval(n.Right, env)
 		if isError(left) {
 			return left
 		}
@@ -71,7 +80,7 @@ func Eval(node ast.Node, env *object.Env) object.Object {
 			return quote(n.Args[0], env)
 		}
 
-		fn := Eval(n.Func, env)
+		fn := defaultEval(n.Func, env)
 		if isError(fn) {
 			return fn
 		}
@@ -83,11 +92,11 @@ func Eval(node ast.Node, env *object.Env) object.Object {
 		return callFunc(fn, args)
 
 	case *ast.IndexExpr:
-		left := Eval(n.Left, env)
+		left := defaultEval(n.Left, env)
 		if isError(left) {
 			return left
 		}
-		index := Eval(n.Index, env)
+		index := defaultEval(n.Index, env)
 		if isError(index) {
 			return index
 		}
@@ -279,12 +288,13 @@ func callFunc(fn object.Object, args []object.Object) object.Object {
 	return &object.Error{Error: fmt.Sprintf("not a function")}
 }
 
-func quote(node ast.Node, env *object.Env) object.Object {
-	return &object.Quote{Node: evalUnquoteCall(node, env)}
+func quote(node ast.Node, env *object.Env, modify ...ast.Modify) object.Object {
+	modify = append(modify, ast.DefaultModify)
+	return &object.Quote{Node: evalUnquoteCall(node, env, modify[0])}
 }
 
-func evalUnquoteCall(quote ast.Node, env *object.Env) ast.Node {
-	return ast.Modify(quote, func(node ast.Node) ast.Node {
+func evalUnquoteCall(quote ast.Node, env *object.Env, modify ast.Modify) ast.Node {
+	return modify(quote, func(node ast.Node) ast.Node {
 		if !isUnquoteCall(node) {
 			return node
 		}
@@ -463,8 +473,9 @@ func addMacro(stmt ast.Node, env *object.Env) {
 	})
 }
 
-func ExpandMacro(program *ast.Program, env *object.Env) ast.Node {
-	return ast.Modify(program, func(node ast.Node) ast.Node {
+func ExpandMacro(program *ast.Program, env *object.Env, modify ...ast.Modify) ast.Node {
+	modify = append(modify, ast.DefaultModify)
+	return modify[0](program, func(node ast.Node) ast.Node {
 		callExpr, ok := node.(*ast.CallExpr)
 		if !ok {
 			return node

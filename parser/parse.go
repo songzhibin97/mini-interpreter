@@ -405,11 +405,9 @@ func (p *Parser) parseBlockStmt() *ast.BlockStmt {
 
 // ============================================================================
 
-func NewParser(l *lexer.Lexer) *Parser {
-	p := &Parser{l: l}
-	p.nextToken()
-	p.nextToken()
+type Registry func(p *Parser)
 
+func defaultRegister(p *Parser) {
 	p.registerPrefix(token.IDENT, p.parseIdentifierExpr)
 	p.registerPrefix(token.INT, p.parseIntegerExpr)
 	p.registerPrefix(token.STRING, p.parseStringExpr)
@@ -435,6 +433,14 @@ func NewParser(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.GTR, p.parseInfixExpr)
 	p.registerInfix(token.LPAREN, p.parseCallExpr)
 	p.registerInfix(token.LBRACK, p.parseIndexExpr)
+}
+
+func NewParser(l *lexer.Lexer, registry ...Registry) *Parser {
+	p := &Parser{l: l}
+	p.nextToken()
+	p.nextToken()
+	registry = append(registry, defaultRegister)
+	registry[0](p)
 
 	return p
 }

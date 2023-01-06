@@ -105,7 +105,7 @@ func TestModify(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		modified := Modify(tt.input, turnOneIntoTwo)
+		modified := DefaultModify(tt.input, turnOneIntoTwo)
 		equal := reflect.DeepEqual(modified, tt.expected)
 		if !equal {
 			t.Errorf("not equal. got=%#v, want=%#v", modified, tt.expected)
@@ -117,7 +117,7 @@ func TestModify(t *testing.T) {
 			one(): one(),
 		},
 	}
-	Modify(mp, turnOneIntoTwo)
+	DefaultModify(mp, turnOneIntoTwo)
 	for key, val := range mp.Elements {
 		key, _ := key.(*Integer)
 		if key.Value != 2 {
